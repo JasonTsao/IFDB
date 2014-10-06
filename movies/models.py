@@ -19,6 +19,7 @@ class Movie(models.Model):
 	release_date = models.DateField(blank=True, null=True)
 	num_distributed_theaters = models.IntegerField(null=True, blank=True)
 	distributors = ListField(EmbeddedModelField('Distributor'))
+	run_time = models.TimeField(null=True, blank=True)
 	
 	created = models.DateTimeField(auto_now_add=True)
 	modified = models.DateTimeField(auto_now=True)
