@@ -11,6 +11,7 @@ class MovieReviewSite(models.Model):
 
 
 class Movie(models.Model):
+	title = models.CharField(max_length=255, unique=True)
 	budget = models.FloatField(null=True, blank=True)
 	gross = models.FloatField(null=True, blank=True)
 	marketing_budget = models.FloatField(null=True, blank=True)
