@@ -70,5 +70,8 @@ def pullMoviePageData(data_url):
 					data[row_datas[0].text[:-1]] = item_data
 				if len(list_results) < 1:
 					data[row_datas[0].text[:-1]] = row_datas[1].text
+		additional_page_li = soup.find_all(attrs={"class": "n1_link"})
+		for additional_page in additional_page_li:
+			page_url = additional_page.find_all('a')[0].get('href')
 	except Exception, e:
 		print e
