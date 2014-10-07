@@ -87,21 +87,51 @@ def loadDailyPerformanceData(new_url):
 		soup = BeautifulSoup(html_doc)
 		tables = soup.find_all('table')[7:]
 		for table in tables:
-			rows = table.find_all('td')
+			rows = table.find_all('tr')
 			for row in rows:
-				datas = row.find_all('font')
-				count = 0
-				for data in datas:
-					count += 1
-					if len(datas) > 6:
-						if count % 2 == 0:
-							continue
-						if count == 1:
-							rtn_data['rank'] = int(data.text)
-						if count == 3:
-							rtn_data['gross'] = int(data.text[1:])
-						if count == 5:
-							rtn_data['daily change'] = int(data.text.split(" / "))
+				table_datas = row.find_all('td')
+				for table_data in table_datas:
+					datas = table_data.find_all('font')
+					if len(datas) == 0:
+						continue
+					count = 0
+					for data in datas:
+						daily_data = {}
+						count += 1
+						if count == 1 and data.text == "Rank ":
+							break
+						if len(datas) == 11:
+							if count % 2 == 0:
+								continue
+							elif count == 1:
+								daily_data['rank'] = int(data.text)
+							elif count == 3:
+								daily_data['gross'] = int(data.text[1:])
+							elif count == 5:
+								daily_data['daily change'] = int(data.text[:-1])
+							elif count == 9:
+								daily_data['theaters'] = int(data.text.split(" / $")[0])
+								daily_data['theater average'] = int(data.text.split(" / $")[1])
+						elif len(datas) == 7:
+							if count == 1:
+								daily_data['rank'] = int(data.text)
+							elif count == 2:
+								daily_data['gross'] = int(data.text[1:])
+							elif count == 3:
+								daily_data['daily change'] = int(data.text[:-1])
+							elif count == 6:
+								daily_data['theaters'] = int(data.text.split(" / $")[0])
+								daily_data['theater average'] = int(data.text.split(" / $")[1])
+						elif len(datas) == 5:
+							if count == 1:
+								daily_data['rank'] = int(data.text)
+							elif count == 2:
+								daily_data['gross'] = int(data.text[1:])
+							elif count == 4:
+								daily_data['theaters'] = int(data.text.split(" / $")[0])
+								daily_data['theater average'] = int(data.text.split(" / $")[1])
+						date = table_data.find_all('a')[0].get('href').split('&')[0].split('sortdate=')[1]
+						rtn_data[date] = daily_data
 	except Exception, e:
 		print e
 	return rtn_data
