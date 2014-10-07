@@ -5,12 +5,13 @@ import urllib2
 import oauth2 as oauth
 import urllib
 
+from django.db.models import Q
 from lxml import html
 from io import StringIO
 from datetime import date, timedelta
 from django.http import HttpResponse, HttpResponseRedirect
 
-from profiles.models import Profile
+from profiles.models import Profile, CollaborationLink
 from movies.models import Movie, MovieGenre
 
 OMDB_API = 'http://www.omdbapi.com/?'
@@ -42,7 +43,7 @@ def saveUserProfile(movie, name, role):
 			profile.movies = movies_array
 		else:
 			movies_array = profile.movies
-			if not movie_id in movies_array:
+			if not movie in movies_array:
 				movies_array.append(movie.id)
 				profile.movies = movies_array
 
@@ -50,11 +51,29 @@ def saveUserProfile(movie, name, role):
 
 	except Exception as e:
 		print 'Unable to get or save {0}: {1}'.format(role, e)
-	return True
+	return profile.id
 
 
-def addProfileLinks(profiles_list):
-	print profiles_list
+def addProfileLinks(profiles_list, movie):
+	try:
+		for profile in profiles_list:
+			for profile_user in profiles_list:
+				if profile != profile_user:
+					print profile
+					print profile_user
+					p1_profile = Profile.objects.get(pk=profile)
+					p2_profile = Profile.objects.get(pk=profile_user)
+
+					print p1_profile
+					print p1_profile.movies
+					print p2_profile
+					print p2_profile.movies
+					collaboration_link, created = CollaborationLink.objects.get_or_create(profile_1=p1_profile, profile_2=p2_profile)
+					if not movie in collaboration_link.movies:
+						collaboration_link.movies.append(movie)
+						collaboration_link.save()
+	except Exception as e:
+		print 'Unable to add profile link: {0}'.format(e)
 	return True
 
 
@@ -98,7 +117,7 @@ def saveMovieAndProfileData(response):
 			actor_id = saveUserProfile(movie, actor, 'actor')
 			movie_collaborators.append(actor_id)
 
-		addProfileLinks(movie_collaborators)
+		addProfileLinks(movie_collaborators, movie.id)
 
 		rtn_dict['success'] = True
 	except Exception as e:
