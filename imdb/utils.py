@@ -10,8 +10,8 @@ from io import StringIO
 from datetime import date, timedelta
 from django.http import HttpResponse, HttpResponseRedirect
 
-from movies.models import Movie, MovieGenre
 from profiles.models import Profile
+from movies.models import Movie, MovieGenre
 
 OMDB_API = 'http://www.omdbapi.com/?'
 
@@ -42,18 +42,29 @@ def saveMovieAndProfileData(response):
 			genres.append(genre)
 
 		movie.genres = genres
+		movie.save()
+
+		movie = Movie.objects.get(imdb_id=response['imdbID'])
 
 		try:
 			director, created = Profile.objects.get_or_create(name=response['Director'], role='director')
 
 			if created:
-				director.movies.append(movie)
+				movies_array = director.movies
+				if not movies_array:
+					movies_array = []
+
+				movies_array.append(movie)
+				director.movies = movies_array
+			else:
+				movies_array = director.movies
+				if not movie in movies_array:
+					movies_array.append(movie)
+					director.movies = movies_array
+
 			director.save()
 		except Exception as e:
 			print 'Unable to get or save director: {0}'.format(e)
-			pass
-
-		movie.save()
 
 		rtn_dict['success'] = True
 	except Exception as e:

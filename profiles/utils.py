@@ -60,39 +60,53 @@ def removeProfiles(request):
 
 def getProfiles(request):
 	rtn_dict = {"success": False, "msg": ""}
-	profiles_movies = []
-	profiles_ids = []
 	profiles_array = []
 
 	profiles = Profile.objects.all()
 
 	for profile in profiles:
-		profiles_ids.append(profile.id)
-		profiles_array.append(model_to_dict(profile))
-		profiles_movies.append(profile.movies)
+		profile_dict = {}
+		movies_array = []
+		profile_dict = model_to_dict(profile)
 
-	rtn_dict['profile_movies'] = profiles_movies
-	rtn_dict['profile_ids'] = profiles_ids
+
+		for movie in profile.movies:
+			movie_genres = []
+			movie_dict = model_to_dict(movie)
+			for movie_genre in movie_dict['genres']:
+				movie_genres.append(model_to_dict(movie_genre))
+
+			movie_dict['genres'] = movie_genres
+			movies_array.append(movie_dict)
+
+		profile_dict['movies'] = movies_array
+		profiles_array.append(profile_dict)
+
 	rtn_dict['profiles'] = profiles_array
-	return HttpResponse(json.dumps(rtn_dict), content_type="application/json")
+
+	return HttpResponse(json.dumps(rtn_dict, indent=4), content_type="application/json")
 
 
 def getMovies(request):
 	rtn_dict = {"success": False, "msg": ""}
-	movies = []
+	movies_array = []
+	movie_ids = []
 
-	try:
-		movie_objs = Movie.objects.all()
+	movies = Movie.objects.all()
 
-		for movie in movie_objs:
-			movies.append(model_to_dict(movie))
-		rtn_dict['success'] = True
-	except Exception as e:
-		print 'Unable to retrieve movies: {0}'.format(e)
-		rtn_dict['msg'] = 'Unable to retrieve movies: {0}'.format(e)
+	for movie in movies:
+		movie_ids.append(movie.id)
+		movie_dict = model_to_dict(movie)
+		movie_genres = []
 
-	rtn_dict['movies'] = movies
+		for movie_genre in movie_dict['genres']:
+			movie_genres.append(model_to_dict(movie_genre))
 
+		movie_dict['genres'] = movie_genres
+		movies_array.append(movie_dict)
+
+	rtn_dict['movies'] = movies_array
+	rtn_dict['movie_ids'] = movie_ids
 	return HttpResponse(json.dumps(rtn_dict), content_type="application/json")
 
 def removeMovies(request):

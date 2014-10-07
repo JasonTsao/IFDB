@@ -44,9 +44,6 @@ class Movie(models.Model):
 	modified = models.DateTimeField(auto_now=True)
 
 
-
-
-
 class MovieScore(models.Model):
 	site = EmbeddedModelField('MovieReviewSite')
 	movie = EmbeddedModelField('Movie')
