@@ -88,6 +88,8 @@ def pullMoviePageData(data_url):
 				new_url = "http://boxofficemojo.com{}".format(page_url)
 				if additional_page.text == "Daily":
 					data["daily"] = loadDailyPerformanceData(new_url)
+				if additional_page.text == "Foreign":
+					data["foreign"] = loadForeignBoxOfficeData(new_url)
 		print data
 	except Exception, e:
 		print "ERROR :: {}".format(e)
@@ -97,6 +99,7 @@ def loadDailyPerformanceData(new_url):
 	rtn_data = []
 	try:
 		html_doc = urllib2.urlopen(new_url).read()
+		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
 		tables = soup.find_all('table')[7:]
 		for table in tables:
@@ -163,4 +166,30 @@ def loadDailyPerformanceData(new_url):
 						rtn_data.append(daily_data)
 	except Exception, e:
 		print "ERROR :: {}".format(e)
+	return rtn_data
+
+
+def loadForeignBoxOfficeData(new_url):
+	rtn_data = []
+	try:
+		html_doc = urllib2.urlopen(new_url).read()
+		html_doc = html_doc.replace("&nbsp;", " ")
+		soup = BeautifulSoup(html_doc)
+		tables = soup.find_all('table')
+		if len(tables) > 5:
+			table = tables[5]
+			table_rows = table.find_all('tr')
+			for row in table_rows:
+				tds = row.find_all('td')
+				if len(tds) > 5:
+					region_dict = {
+						"country": tds[0].text,
+						"distributor": tds[1].text,
+						"release date": td[2].text,
+						"opening weekend": int(td[3].text[1:]),
+						"total gross": int(td[5].text[1:]),
+					}
+					rtn_data.append(region_dict)
+	except Exception, e:
+		print e
 	return rtn_data
