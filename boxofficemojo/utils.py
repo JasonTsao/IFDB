@@ -70,8 +70,38 @@ def pullMoviePageData(data_url):
 					data[row_datas[0].text[:-1]] = item_data
 				if len(list_results) < 1:
 					data[row_datas[0].text[:-1]] = row_datas[1].text
-		additional_page_li = soup.find_all(attrs={"class": "n1_link"})
-		for additional_page in additional_page_li:
-			page_url = additional_page.find_all('a')[0].get('href')
+		additional_page_li = soup.find_all(attrs={"class": "nav_tabs"})[0].find_all('a')
+		for additional_page in additional_page_a:
+			page_url = additional_page.get('href')
+			new_url = "http://boxofficemojo.com{}".format(page_url)
+			if additional_page.text == "Daily":
+				loadDailyPerformanceData(new_url)
 	except Exception, e:
 		print e
+
+
+def loadDailyPerformanceData(new_url):
+	rtn_data = {}
+	try:
+		html_doc = urllib2.urlopen(new_url).read()
+		soup = BeautifulSoup(html_doc)
+		tables = soup.find_all('table')[7:]
+		for table in tables:
+			rows = table.find_all('td')
+			for row in rows:
+				datas = row.find_all('font')
+				count = 0
+				for data in datas:
+					count += 1
+					if len(datas) > 6:
+						if count % 2 == 0:
+							continue
+						if count == 1:
+							rtn_data['rank'] = int(data.text)
+						if count == 3:
+							rtn_data['gross'] = int(data.text[1:])
+						if count == 5:
+							rtn_data['daily change'] = int(data.text.split(" / "))
+	except Exception, e:
+		print e
+	return rtn_data
