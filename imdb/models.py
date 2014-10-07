@@ -15,7 +15,7 @@ class IMDBMedia(models.Model):
 	country = models.CharField(max_length=255, null=True, blank=True)
 	actors = ListField(null=True, blank=True)
 	released = models.DateField(null=True,blank=True)
-	genre = models.ListField(null=True,blank=True)
+	genre = ListField(null=True,blank=True)
 	awards = models.CharField(max_length=255, null=True, blank=True)
 	run_time = models.CharField(max_length=255, null=True, blank=True)
 	imdb_rating = models.FloatField(max_length=255, null=True, blank=True)

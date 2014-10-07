@@ -12,6 +12,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^profiles/', include('profiles.urls')),
     url(r'^imdb/', include('imdb.urls')),
+    url(r'^movies/', include('movies.urls')),
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 

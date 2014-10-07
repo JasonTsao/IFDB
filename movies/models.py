@@ -10,16 +10,21 @@ class MovieReviewSite(models.Model):
 	models.CharField(max_length=255)
 
 
+class MovieGenre(models.Model):
+	genre = models.CharField(max_length=255)
+
+
 class Movie(models.Model):
 	title = models.CharField(max_length=255, unique=True)
 	budget = models.FloatField(null=True, blank=True)
 	gross = models.FloatField(null=True, blank=True)
 	marketing_budget = models.FloatField(null=True, blank=True)
-	genre = models.CharField(max_length=255, null=True, blank=True)
+	genres = ListField(EmbeddedModelField('MovieGenre'))
 	release_date = models.DateField(blank=True, null=True)
 	num_distributed_theaters = models.IntegerField(null=True, blank=True)
 	distributors = ListField(EmbeddedModelField('Distributor'))
 	run_time = models.TimeField(null=True, blank=True)
+	plot = models.CharField(max_length=255, null=True, blank=True)
 
 	year = models.PositiveSmallIntegerField(blank=True, null=True)
 
@@ -37,6 +42,10 @@ class Movie(models.Model):
 	
 	created = models.DateTimeField(auto_now_add=True)
 	modified = models.DateTimeField(auto_now=True)
+
+
+
+
 
 class MovieScore(models.Model):
 	site = EmbeddedModelField('MovieReviewSite')
