@@ -20,6 +20,7 @@ def pullMovieDataFromList(list_id):
 	request_url = "http://boxofficemojo.com/movies/alphabetical.htm?letter={0}&p=.htm".format(list_id)
 	try:
 		html_doc = urllib2.urlopen(request_url).read()
+		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
 		html_tables = soup.find_all('table')
 		movie_list = html_tables[3].find_all('tr')
@@ -47,6 +48,7 @@ def pullMoviePageData(data_url):
 	try:
 		data = {}
 		html_doc = urllib2.urlopen(request_url).read()
+		html_doc = html_doc.replace("&nbsp;", "")
 		soup = BeautifulSoup(html_doc)
 		data_divs = soup.find_all(attrs={"class": "mp_box"})
 		for data_div in data_divs:
@@ -55,7 +57,18 @@ def pullMoviePageData(data_url):
 			for row in data_rows:
 				results = None
 				row_datas = row.find_all('td')
-				list_results = row_datas[1].find_all('a')
-				data[row_datas[0].text[:-1]] = row_datas[1].text
+				result_string = str(row_datas[1])
+				list_results = result_string.split("<br/>")
+				for result in list_results:
+					item_data = {}
+					item_name = BeautifulSoup(result).find_all('a')
+					if len(item_name) > 0:
+						item_data["name"] = item_name[0].text
+						item_data["url"] = item_name[0].get('href')
+					else:
+						item_data["name"] = item_name[0].text
+					data[row_datas[0].text[:-1]] = item_data
+				if len(list_results) < 1:
+					data[row_datas[0].text[:-1]] = row_datas[1].text
 	except Exception, e:
 		print e
