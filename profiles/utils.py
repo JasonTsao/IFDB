@@ -70,8 +70,10 @@ def getProfiles(request):
 		profile_dict = model_to_dict(profile)
 
 
-		for movie in profile.movies:
+		for movie_id in profile.movies:
 			movie_genres = []
+
+			movie = Movie.objects.get(id=movie_id)
 			movie_dict = model_to_dict(movie)
 			for movie_genre in movie_dict['genres']:
 				movie_genres.append(model_to_dict(movie_genre))
