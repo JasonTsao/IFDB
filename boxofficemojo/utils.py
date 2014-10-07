@@ -26,7 +26,7 @@ def pullMovieDataFromList(list_id):
 		movie_list = html_tables[3].find_all('tr')
 		count = 0
 		for movie in movie_list:
-			if count = 0:
+			if count == 0:
 				count += 1
 				continue
 			movie_datas = movie.find_all('td')
@@ -48,40 +48,53 @@ def pullMoviePageData(data_url):
 	try:
 		data = {}
 		html_doc = urllib2.urlopen(request_url).read()
-		html_doc = html_doc.replace("&nbsp;", "")
+		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
 		data_divs = soup.find_all(attrs={"class": "mp_box"})
 		for data_div in data_divs:
-			data_table = data_div.find_all('table')[0]
-			data_rows = data_table.find_all('tr')
-			for row in data_rows:
-				results = None
-				row_datas = row.find_all('td')
-				result_string = str(row_datas[1])
-				list_results = result_string.split("<br/>")
-				for result in list_results:
-					item_data = {}
-					item_name = BeautifulSoup(result).find_all('a')
-					if len(item_name) > 0:
-						item_data["name"] = item_name[0].text
-						item_data["url"] = item_name[0].get('href')
+			if len(data_div.find_all('table')) < 1:
+				pass
+			else:
+				data_table = data_div.find_all('table')[0]
+				data_rows = data_table.find_all('tr')
+				for row in data_rows:
+					results = None
+					row_datas = row.find_all('td')
+					if len(row_datas) < 2:
+						continue
+					result_string = str(row_datas[1])
+					list_results = result_string.split("<br/>")
+					if len(list_results) < 2:
+						key = row_datas[0].text
+						if key[-1:] == ":":
+							key = key[:-1]
+						data[key] = row_datas[1].text
 					else:
-						item_data["name"] = item_name[0].text
-					data[row_datas[0].text[:-1]] = item_data
-				if len(list_results) < 1:
-					data[row_datas[0].text[:-1]] = row_datas[1].text
-		additional_page_li = soup.find_all(attrs={"class": "nav_tabs"})[0].find_all('a')
-		for additional_page in additional_page_a:
-			page_url = additional_page.get('href')
-			new_url = "http://boxofficemojo.com{}".format(page_url)
-			if additional_page.text == "Daily":
-				loadDailyPerformanceData(new_url)
+						for result in list_results:
+							item_data = {}
+							item_name = BeautifulSoup(result).find_all('a')
+							if len(item_name) > 0:
+								item_data["name"] = item_name[0].text
+								item_data["url"] = item_name[0].get('href')
+							key = row_datas[0].text
+							if key[-1:] == ":":
+								key = key[:-1]
+							data[key] = item_data
+		next_data = soup.find_all(attrs={"class": "nav_tabs"})
+		if len(next_data) > 0:
+			additional_page_li = next_data[0].find_all('a')
+			for additional_page in additional_page_li:
+				page_url = additional_page.get('href')
+				new_url = "http://boxofficemojo.com{}".format(page_url)
+				if additional_page.text == "Daily":
+					data["daily"] = loadDailyPerformanceData(new_url)
+		print data
 	except Exception, e:
-		print e
+		print "ERROR :: {}".format(e)
 
 
 def loadDailyPerformanceData(new_url):
-	rtn_data = {}
+	rtn_data = []
 	try:
 		html_doc = urllib2.urlopen(new_url).read()
 		soup = BeautifulSoup(html_doc)
@@ -90,48 +103,64 @@ def loadDailyPerformanceData(new_url):
 			rows = table.find_all('tr')
 			for row in rows:
 				table_datas = row.find_all('td')
+				print "HELLO"
 				for table_data in table_datas:
 					datas = table_data.find_all('font')
 					if len(datas) == 0:
 						continue
 					count = 0
+					print "HOLA"
+					print datas
+					daily_data = {}
 					for data in datas:
-						daily_data = {}
 						count += 1
-						if count == 1 and data.text == "Rank ":
+						print count
+						print data.text
+						if count == 1 and "Rank" in data.text:
 							break
 						if len(datas) == 11:
 							if count % 2 == 0:
 								continue
 							elif count == 1:
-								daily_data['rank'] = int(data.text)
+								if "-" in data.text:
+									daily_data['rank'] = "Not Ranked"
+								else:
+									daily_data['rank'] = int(data.text.replace(",", ""))
 							elif count == 3:
-								daily_data['gross'] = int(data.text[1:])
+								daily_data['gross'] = int(data.text[1:].replace(",", ""))
 							elif count == 5:
-								daily_data['daily change'] = int(data.text[:-1])
+								daily_data['daily change'] = float(data.text[:-1].replace(",", ""))
 							elif count == 9:
-								daily_data['theaters'] = int(data.text.split(" / $")[0])
-								daily_data['theater average'] = int(data.text.split(" / $")[1])
+								daily_data['theaters'] = int(data.text.split(" / $")[0].replace(",", ""))
+								daily_data['theater average'] = int(data.text.split(" / $")[1].replace(",", ""))
 						elif len(datas) == 7:
 							if count == 1:
-								daily_data['rank'] = int(data.text)
+								if "-" in data.text:
+									daily_data['rank'] = "Not Ranked"
+								else:
+									daily_data['rank'] = int(data.text.replace(",", ""))
 							elif count == 2:
-								daily_data['gross'] = int(data.text[1:])
+								daily_data['gross'] = int(data.text[1:].replace(",", ""))
 							elif count == 3:
-								daily_data['daily change'] = int(data.text[:-1])
+								daily_data['daily change'] = float(data.text[:-1].replace(",", ""))
 							elif count == 6:
-								daily_data['theaters'] = int(data.text.split(" / $")[0])
-								daily_data['theater average'] = int(data.text.split(" / $")[1])
+								daily_data['theaters'] = int(data.text.split(" / $")[0].replace(",", ""))
+								daily_data['theater average'] = int(data.text.split(" / $")[1].replace(",", ""))
 						elif len(datas) == 5:
 							if count == 1:
-								daily_data['rank'] = int(data.text)
+								if "-" in data.text:
+									daily_data['rank'] = "Not Ranked"
+								else:
+									daily_data['rank'] = int(data.text.replace(",", ""))
 							elif count == 2:
-								daily_data['gross'] = int(data.text[1:])
+								daily_data['gross'] = int(data.text[1:].replace(",", ""))
 							elif count == 4:
-								daily_data['theaters'] = int(data.text.split(" / $")[0])
-								daily_data['theater average'] = int(data.text.split(" / $")[1])
+								daily_data['theaters'] = int(data.text.split(" / $")[0].replace(",", ""))
+								daily_data['theater average'] = int(data.text.split(" / $")[1].replace(",", ""))
+						# this date is being stored with format YYYY-MM-DD
 						date = table_data.find_all('a')[0].get('href').split('&')[0].split('sortdate=')[1]
-						rtn_data[date] = daily_data
+						daily_data["date"] = date
+						rtn_data.append(daily_data)
 	except Exception, e:
-		print e
+		print "ERROR :: {}".format(e)
 	return rtn_data
