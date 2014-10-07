@@ -69,17 +69,19 @@ def getProfiles(request):
 		movies_array = []
 		profile_dict = model_to_dict(profile)
 
+		for movie in profile.movies:
+			movie = Movie.objects.get(id=movie)
+			movies_array.append(movie.title)
 
-		for movie_id in profile.movies:
+			'''
 			movie_genres = []
-
-			movie = Movie.objects.get(id=movie_id)
 			movie_dict = model_to_dict(movie)
 			for movie_genre in movie_dict['genres']:
 				movie_genres.append(model_to_dict(movie_genre))
 
 			movie_dict['genres'] = movie_genres
 			movies_array.append(movie_dict)
+			'''
 
 		profile_dict['movies'] = movies_array
 		profiles_array.append(profile_dict)

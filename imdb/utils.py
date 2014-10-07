@@ -28,7 +28,7 @@ def searchOMDB(url):
 	return response
 
 
-def saveUserProfile(movie_id, name, role):
+def saveUserProfile(movie, name, role):
 	# Saving Writer information
 	try:
 		profile, created = Profile.objects.get_or_create(name=name, role=role)
@@ -38,23 +38,30 @@ def saveUserProfile(movie_id, name, role):
 			if not movies_array:
 				movies_array = []
 
-			movies_array.append(movie_id)
+			movies_array.append(movie.id)
 			profile.movies = movies_array
 		else:
 			movies_array = profile.movies
 			if not movie_id in movies_array:
-				movies_array.append(movie_id)
+				movies_array.append(movie.id)
 				profile.movies = movies_array
 
 		profile.save()
+
 	except Exception as e:
 		print 'Unable to get or save {0}: {1}'.format(role, e)
+	return True
+
+
+def addProfileLinks(profiles_list):
+	print profiles_list
 	return True
 
 
 def saveMovieAndProfileData(response):
 	rtn_dict = {'success':False, 'msg':''}
 	try:
+		movie_collaborators = []
 		movie, created = Movie.objects.get_or_create(imdb_id=response['imdbID'])
 		movie.title = response['Title']
 
@@ -71,19 +78,27 @@ def saveMovieAndProfileData(response):
 		movie.metascore = int(response['Metascore'])
 		movie.imdb_rating = float(response['imdbRating'])
 
+		movie.release_date = datetime.datetime.strptime(response['Released'], '%d %b %Y').date()
+		movie.year = int(response['Year'])
 		movie.save()
 
 		movie = Movie.objects.get(imdb_id=response['imdbID'])
 
 		# Saving Director Information
-		saveUserProfile(movie.id, response['Director'], 'director')
+		director_id = saveUserProfile(movie, response['Director'], 'director')
 		# Saving Writer Information
-		saveUserProfile(movie.id, response['Writer'], 'writer')
+		writer_id = saveUserProfile(movie, response['Writer'], 'writer')
+
+		movie_collaborators.append(director_id)
+		movie_collaborators.append(writer_id)
 
 		actors = response['Actors'].split(',')
 
 		for actor in actors:
-			saveUserProfile(movie.id, actor, 'actor')
+			actor_id = saveUserProfile(movie, actor, 'actor')
+			movie_collaborators.append(actor_id)
+
+		addProfileLinks(movie_collaborators)
 
 		rtn_dict['success'] = True
 	except Exception as e:

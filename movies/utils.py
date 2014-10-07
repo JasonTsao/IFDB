@@ -45,6 +45,7 @@ def getMovies(request):
 			movie_genres.append(model_to_dict(movie_genre))
 
 		movie_dict['genres'] = movie_genres
+		movie_dict['release_date'] = str(movie_dict['release_date'])
 		movies_array.append(movie_dict)
 
 	rtn_dict['movies'] = movies_array
