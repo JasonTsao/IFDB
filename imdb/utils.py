@@ -28,6 +28,30 @@ def searchOMDB(url):
 	return response
 
 
+def saveUserProfile(movie_id, name, role):
+	# Saving Writer information
+	try:
+		profile, created = Profile.objects.get_or_create(name=name, role=role)
+
+		if created:
+			movies_array = profile.movies
+			if not movies_array:
+				movies_array = []
+
+			movies_array.append(movie_id)
+			profile.movies = movies_array
+		else:
+			movies_array = profile.movies
+			if not movie_id in movies_array:
+				movies_array.append(movie_id)
+				profile.movies = movies_array
+
+		profile.save()
+	except Exception as e:
+		print 'Unable to get or save {0}: {1}'.format(role, e)
+	return True
+
+
 def saveMovieAndProfileData(response):
 	rtn_dict = {'success':False, 'msg':''}
 	try:
@@ -42,29 +66,24 @@ def saveMovieAndProfileData(response):
 			genres.append(genre)
 
 		movie.genres = genres
+		movie.language = response['Language']
+		movie.Country = response['Country']
+		movie.metascore = int(response['Metascore'])
+		movie.imdb_rating = float(response['imdbRating'])
+
 		movie.save()
 
 		movie = Movie.objects.get(imdb_id=response['imdbID'])
 
-		try:
-			director, created = Profile.objects.get_or_create(name=response['Director'], role='director')
+		# Saving Director Information
+		saveUserProfile(movie.id, response['Director'], 'director')
+		# Saving Writer Information
+		saveUserProfile(movie.id, response['Writer'], 'writer')
 
-			if created:
-				movies_array = director.movies
-				if not movies_array:
-					movies_array = []
+		actors = response['Actors'].split(',')
 
-				movies_array.append(movie)
-				director.movies = movies_array
-			else:
-				movies_array = director.movies
-				if not movie in movies_array:
-					movies_array.append(movie)
-					director.movies = movies_array
-
-			director.save()
-		except Exception as e:
-			print 'Unable to get or save director: {0}'.format(e)
+		for actor in actors:
+			saveUserProfile(movie.id, actor, 'actor')
 
 		rtn_dict['success'] = True
 	except Exception as e:
