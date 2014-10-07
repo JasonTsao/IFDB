@@ -59,19 +59,18 @@ def addProfileLinks(profiles_list, movie):
 		for profile in profiles_list:
 			for profile_user in profiles_list:
 				if profile != profile_user:
-					print profile
-					print profile_user
+
 					p1_profile = Profile.objects.get(pk=profile)
 					p2_profile = Profile.objects.get(pk=profile_user)
 
-					print p1_profile
-					print p1_profile.movies
-					print p2_profile
-					print p2_profile.movies
-					collaboration_link, created = CollaborationLink.objects.get_or_create(profile_1=p1_profile, profile_2=p2_profile)
-					if not movie in collaboration_link.movies:
-						collaboration_link.movies.append(movie)
-						collaboration_link.save()
+					try:
+						CollaborationLink.objects.get(profile_1=p2_profile, profile_2=p1_profile)
+					except:
+						collaboration_link, created = CollaborationLink.objects.get_or_create(profile_1=p1_profile, profile_2=p2_profile)
+						if not movie in collaboration_link.movies:
+							collaboration_link.movies.append(movie)
+							collaboration_link.save()
+					
 	except Exception as e:
 		print 'Unable to add profile link: {0}'.format(e)
 	return True
