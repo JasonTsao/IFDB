@@ -5,12 +5,13 @@ import urllib2
 import oauth2 as oauth
 import urllib
 
+from django.db.models import Q
 from lxml import html
 from io import StringIO
 from datetime import date, timedelta
 from django.http import HttpResponse, HttpResponseRedirect
 
-from profiles.models import Profile
+from profiles.models import Profile, CollaborationLink
 from movies.models import Movie, MovieGenre
 
 OMDB_API = 'http://www.omdbapi.com/?'
@@ -28,7 +29,7 @@ def searchOMDB(url):
 	return response
 
 
-def saveUserProfile(movie_id, name, role):
+def saveUserProfile(movie, name, role):
 	# Saving Writer information
 	try:
 		profile, created = Profile.objects.get_or_create(name=name, role=role)
@@ -38,23 +39,48 @@ def saveUserProfile(movie_id, name, role):
 			if not movies_array:
 				movies_array = []
 
-			movies_array.append(movie_id)
+			movies_array.append(movie.id)
 			profile.movies = movies_array
 		else:
 			movies_array = profile.movies
-			if not movie_id in movies_array:
-				movies_array.append(movie_id)
+			if not movie in movies_array:
+				movies_array.append(movie.id)
 				profile.movies = movies_array
 
 		profile.save()
+
 	except Exception as e:
 		print 'Unable to get or save {0}: {1}'.format(role, e)
+	return profile.id
+
+
+def addProfileLinks(profiles_list, movie):
+	try:
+		for profile in profiles_list:
+			for profile_user in profiles_list:
+				if profile != profile_user:
+					print profile
+					print profile_user
+					p1_profile = Profile.objects.get(pk=profile)
+					p2_profile = Profile.objects.get(pk=profile_user)
+
+					print p1_profile
+					print p1_profile.movies
+					print p2_profile
+					print p2_profile.movies
+					collaboration_link, created = CollaborationLink.objects.get_or_create(profile_1=p1_profile, profile_2=p2_profile)
+					if not movie in collaboration_link.movies:
+						collaboration_link.movies.append(movie)
+						collaboration_link.save()
+	except Exception as e:
+		print 'Unable to add profile link: {0}'.format(e)
 	return True
 
 
 def saveMovieAndProfileData(response):
 	rtn_dict = {'success':False, 'msg':''}
 	try:
+		movie_collaborators = []
 		movie, created = Movie.objects.get_or_create(imdb_id=response['imdbID'])
 		movie.title = response['Title']
 
@@ -71,19 +97,27 @@ def saveMovieAndProfileData(response):
 		movie.metascore = int(response['Metascore'])
 		movie.imdb_rating = float(response['imdbRating'])
 
+		movie.release_date = datetime.datetime.strptime(response['Released'], '%d %b %Y').date()
+		movie.year = int(response['Year'])
 		movie.save()
 
 		movie = Movie.objects.get(imdb_id=response['imdbID'])
 
 		# Saving Director Information
-		saveUserProfile(movie.id, response['Director'], 'director')
+		director_id = saveUserProfile(movie, response['Director'], 'director')
 		# Saving Writer Information
-		saveUserProfile(movie.id, response['Writer'], 'writer')
+		writer_id = saveUserProfile(movie, response['Writer'], 'writer')
+
+		movie_collaborators.append(director_id)
+		movie_collaborators.append(writer_id)
 
 		actors = response['Actors'].split(',')
 
 		for actor in actors:
-			saveUserProfile(movie.id, actor, 'actor')
+			actor_id = saveUserProfile(movie, actor, 'actor')
+			movie_collaborators.append(actor_id)
+
+		addProfileLinks(movie_collaborators, movie.id)
 
 		rtn_dict['success'] = True
 	except Exception as e:

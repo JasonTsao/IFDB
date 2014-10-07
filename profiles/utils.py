@@ -69,17 +69,19 @@ def getProfiles(request):
 		movies_array = []
 		profile_dict = model_to_dict(profile)
 
+		for movie in profile.movies:
+			movie = Movie.objects.get(id=movie)
+			movies_array.append(movie.title)
 
-		for movie_id in profile.movies:
+			'''
 			movie_genres = []
-
-			movie = Movie.objects.get(id=movie_id)
 			movie_dict = model_to_dict(movie)
 			for movie_genre in movie_dict['genres']:
 				movie_genres.append(model_to_dict(movie_genre))
 
 			movie_dict['genres'] = movie_genres
 			movies_array.append(movie_dict)
+			'''
 
 		profile_dict['movies'] = movies_array
 		profiles_array.append(profile_dict)
@@ -87,6 +89,38 @@ def getProfiles(request):
 	rtn_dict['profiles'] = profiles_array
 
 	return HttpResponse(json.dumps(rtn_dict, indent=4), content_type="application/json")
+
+
+def getCollborationLinks(request):
+	rtn_dict = {"success": False, "msg": ""}
+	links_array = []
+
+	try:
+		collaboration_links = CollaborationLink.objects.all()
+
+		for link in collaboration_links:
+			links_array.append(model_to_dict(link))
+		rtn_dict['collaboration_links'] = links_array
+		rtn_dict['success'] = True
+	except Exception as e:
+		print 'Unable to get collaboration links: {0}'.format(e)
+		rtn_dict['msg'] = 'Unable to get collaboration links: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, indent=4), content_type="application/json")
+
+
+def removeCollborationLinks(request):
+	rtn_dict = {"success": False, "msg": ""}
+
+	try:
+		links = CollaborationLink.objects.all()
+
+		for link in links:
+			link.delete()
+		rtn_dict['success'] = True
+	except Exception as e:
+		print 'Unable to remove movies: {0}'.format(e)
+
+	return HttpResponse(json.dumps(rtn_dict), content_type="application/json")
 
 
 def getMovies(request):
