@@ -13,7 +13,9 @@ import urllib
 
 
 def syncBoxOfficeMojoData():
-	pass
+	char_arr = ["NUM", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+	for char in charr_arr:
+		pullMovieDataFromList(char)
 
 
 def pullMovieDataFromList(list_id):
@@ -44,9 +46,9 @@ def pullMovieDataFromList(list_id):
 
 
 def pullMoviePageData(data_url):
-	request_url = "http://boxofficemojo.com{}".format(data_url)
+	data = {}
 	try:
-		data = {}
+		request_url = "http://boxofficemojo.com{}".format(data_url)
 		html_doc = urllib2.urlopen(request_url).read()
 		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
@@ -99,9 +101,9 @@ def pullMoviePageData(data_url):
 					data["daily"] = loadDailyPerformanceData(new_url)
 				if additional_page.text == "Foreign":
 					data["foreign"] = loadForeignBoxOfficeData(new_url)
-		print data
 	except Exception, e:
 		print "ERROR :: {}".format(e)
+	return data
 
 
 def loadDailyPerformanceData(new_url):
