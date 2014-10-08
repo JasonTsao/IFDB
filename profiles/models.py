@@ -5,6 +5,10 @@ from djangotoolbox.fields import ListField, EmbeddedModelField, DictField
 from movies.models import Movie, MovieGenre
 from .forms import StringListField
 
+#How to make EmbeddedField and ListField viewable in the admin page
+#https://gist.github.com/jonashaag/1200165
+#https://gist.github.com/ielshareef/3011156
+
 class MovieListField(ListField):
     def formfield(self, **kwargs):
         return models.Field.formfield(self, StringListField, **kwargs)
