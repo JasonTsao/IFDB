@@ -13,7 +13,9 @@ import urllib
 
 
 def syncBoxOfficeMojoData():
-	pass
+	char_arr = ["NUM", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+	for char in charr_arr:
+		pullMovieDataFromList(char)
 
 
 def pullMovieDataFromList(list_id):
@@ -44,12 +46,21 @@ def pullMovieDataFromList(list_id):
 
 
 def pullMoviePageData(data_url):
-	request_url = "http://boxofficemojo.com{}".format(data_url)
+	data = {}
 	try:
-		data = {}
+		request_url = "http://boxofficemojo.com{}".format(data_url)
 		html_doc = urllib2.urlopen(request_url).read()
 		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
+		tables = soup.find_all('table')
+		if len(tables) > 5:
+			table = tables[5]
+			rows = table.find_all('tr')
+			for row in rows:
+				row_data = row.text.split('\n')
+				for item in row_data:
+					item_info = item.split(": ")
+					data[item_info[0]] = item_info[1]
 		data_divs = soup.find_all(attrs={"class": "mp_box"})
 		for data_div in data_divs:
 			if len(data_div.find_all('table')) < 1:
@@ -88,34 +99,32 @@ def pullMoviePageData(data_url):
 				new_url = "http://boxofficemojo.com{}".format(page_url)
 				if additional_page.text == "Daily":
 					data["daily"] = loadDailyPerformanceData(new_url)
-		print data
+				if additional_page.text == "Foreign":
+					data["foreign"] = loadForeignBoxOfficeData(new_url)
 	except Exception, e:
 		print "ERROR :: {}".format(e)
+	return data
 
 
 def loadDailyPerformanceData(new_url):
 	rtn_data = []
 	try:
 		html_doc = urllib2.urlopen(new_url).read()
+		html_doc = html_doc.replace("&nbsp;", " ")
 		soup = BeautifulSoup(html_doc)
 		tables = soup.find_all('table')[7:]
 		for table in tables:
 			rows = table.find_all('tr')
 			for row in rows:
 				table_datas = row.find_all('td')
-				print "HELLO"
 				for table_data in table_datas:
 					datas = table_data.find_all('font')
 					if len(datas) == 0:
 						continue
 					count = 0
-					print "HOLA"
-					print datas
 					daily_data = {}
 					for data in datas:
 						count += 1
-						print count
-						print data.text
 						if count == 1 and "Rank" in data.text:
 							break
 						if len(datas) == 11:
@@ -163,4 +172,30 @@ def loadDailyPerformanceData(new_url):
 						rtn_data.append(daily_data)
 	except Exception, e:
 		print "ERROR :: {}".format(e)
+	return rtn_data
+
+
+def loadForeignBoxOfficeData(new_url):
+	rtn_data = []
+	try:
+		html_doc = urllib2.urlopen(new_url).read()
+		html_doc = html_doc.replace("&nbsp;", " ")
+		soup = BeautifulSoup(html_doc)
+		tables = soup.find_all('table')
+		if len(tables) > 5:
+			table = tables[5]
+			table_rows = table.find_all('tr')
+			for row in table_rows:
+				tds = row.find_all('td')
+				if len(tds) > 5:
+					region_dict = {
+						"country": tds[0].text,
+						"distributor": tds[1].text,
+						"release date": td[2].text,
+						"opening weekend": int(td[3].text[1:]),
+						"total gross": int(td[5].text[1:]),
+					}
+					rtn_data.append(region_dict)
+	except Exception, e:
+		print e
 	return rtn_data
