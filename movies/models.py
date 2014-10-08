@@ -12,6 +12,11 @@ class MovieReviewSite(models.Model):
 
 class MovieGenre(models.Model):
 	genre = models.CharField(max_length=255)
+	def __unicode__(self):
+		try:
+			return str('{0}'.format(self.genre)).decode().encode('utf-8')
+		except Exception as e:
+			return "Can't be displayed"
 
 
 class Movie(models.Model):
@@ -42,6 +47,12 @@ class Movie(models.Model):
 	
 	created = models.DateTimeField(auto_now_add=True)
 	modified = models.DateTimeField(auto_now=True)
+
+	def __unicode__(self):
+		try:
+			return str('{0} : {1}'.format(self.title, self.year)).decode().encode('utf-8')
+		except Exception as e:
+			return "Can't be displayed"
 
 
 class MovieScore(models.Model):
