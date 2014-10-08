@@ -1,5 +1,6 @@
 from django.db import models
 from djangotoolbox.fields import ListField, EmbeddedModelField, DictField
+from profiles.forms import StringListField
 
 
 class Distributor(models.Model):
@@ -34,7 +35,7 @@ class Movie(models.Model):
 	year = models.PositiveSmallIntegerField(blank=True, null=True)
 
 	rated = models.CharField(max_length=255, null=True, blank=True)
-	language = models.CharField(max_length=255, null=True, blank=True)
+	languages = ListField(models.CharField(max_length=255))
 
 	imdb_id = models.CharField(max_length=255, null=True, blank=True)
 	imdb_votes = models.CharField(max_length=255, null=True, blank=True)

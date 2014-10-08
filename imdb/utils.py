@@ -18,6 +18,7 @@ OMDB_API = 'http://www.omdbapi.com/?'
 
 
 def searchOMDB(url):
+	response = False
 	try:
 		conn = urllib2.urlopen(url)
 		try:
@@ -34,8 +35,15 @@ def saveUserProfile(movie, name, role):
 	try:
 		profile, created = Profile.objects.get_or_create(name=name, role=role)
 
+		print 'name: {0}'.format(name)
+		print 'created: {0}'.format(e)
+
 		if created:
 			movies_array = profile.movies
+
+			print 'movies array'
+			print movies_array
+
 			if not movies_array:
 				movies_array = []
 
@@ -133,7 +141,11 @@ def omdbSearchByTitle(request):
 	movie_title = request.GET.get('title', False)
 
 	if movie_title :
-		url = OMDB_API + 't=' + movie_title
+		request_parameters = {
+			't': movie_title
+		}
+
+		url = OMDB_API + urllib.urlencode(request_parameters)
 		response = searchOMDB(url)
 
 		saved = saveMovieAndProfileData(response)
