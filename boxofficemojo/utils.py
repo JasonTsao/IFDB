@@ -14,7 +14,7 @@ import urllib
 
 def syncBoxOfficeMojoData():
 	char_arr = ["NUM", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-	for char in charr_arr:
+	for char in char_arr:
 		pullMovieDataFromList(char)
 
 
@@ -33,13 +33,27 @@ def pullMovieDataFromList(list_id):
 				continue
 			movie_datas = movie.find_all('td')
 			movie_name = movie_datas[0].find_all('b')[0].text
+			print movie_name
 			movie_data_url = movie_datas[0].find_all('a')[0].get('href')
 			movie_studio = movie_datas[1].find_all('font')[0].text
-			total_gross = int(movie_datas[2].find_all('font')[0].text[1:])
-			total_theaters = int(movie_datas[3].fidn_all('font')[0].text)
-			opening_gross = int(movie_datas[4].find_all('font')[0].text[1:])
-			opening_theaters = int(movie_datas[5].find_all('font')[0].text[1:])
+			print movie_studio
+			total_gross = movie_datas[2].find_all('font')[0].text[1:].replace(",", "")
+			print total_gross
+			if "/a" not in total_gross.lower():
+				total_gross = int(total_gross)
+			print "hey"
+			total_theaters = movie_datas[3].find_all('font')[0].text.replace(",", "")
+			print total_theaters
+			if "/a" not in total_theaters.lower():
+				total_theaters = int(total_theaters)
+			opening_gross = movie_datas[4].find_all('font')[0].text[1:].replace(",", "")
+			if "/a" not in opening_gross.lower():
+				opening_gross = int(opening_gross)
+			opening_theaters = movie_datas[5].find_all('font')[0].text.replace(",", "")
+			if "/a" not in opening_theaters.lower():
+				opening_theaters = int(opening_theaters)
 			opening = movie_datas[6].find_all('a')[0].text
+			print opening
 			details = pullMoviePageData(movie_data_url)
 	except Exception, e:
 		print e
@@ -125,7 +139,7 @@ def loadDailyPerformanceData(new_url):
 					daily_data = {}
 					for data in datas:
 						count += 1
-						if count == 1 and "Rank" in data.text:
+						if "rank" in data.text.lower():
 							break
 						if len(datas) == 11:
 							if count % 2 == 0:
@@ -184,18 +198,27 @@ def loadForeignBoxOfficeData(new_url):
 		tables = soup.find_all('table')
 		if len(tables) > 5:
 			table = tables[5]
-			table_rows = table.find_all('tr')
+			table_rows = table.find_all('tr')[3:]
+			count = 0
 			for row in table_rows:
 				tds = row.find_all('td')
 				if len(tds) > 5:
+					if count == 0:
+						count += 1
+						continue
+					print tds
 					region_dict = {
 						"country": tds[0].text,
 						"distributor": tds[1].text,
-						"release date": td[2].text,
-						"opening weekend": int(td[3].text[1:]),
-						"total gross": int(td[5].text[1:]),
+						"release date": tds[2].text,
 					}
+					opening_weekend = tds[3].text[1:].replace(",", "")
+					total_gross = tds[5].text[1:].replace(",", "")
+					if "-" not in opening_weekend.lower() and len(opening_weekend) > 0:
+						region_dict["opening weekend"] = int(opening_weekend)
+					if "/a" not in total_gross.lower() and len(total_gross) > 0:
+						region_dict["total gross"] = int(total_gross)
 					rtn_data.append(region_dict)
 	except Exception, e:
-		print e
+		print "ERROR (FOREIGN STATS) :: {}".format(e)
 	return rtn_data
