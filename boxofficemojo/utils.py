@@ -130,8 +130,12 @@ def pullMoviePageData(data_url):
 				new_url = "http://boxofficemojo.com{}".format(page_url)
 				if additional_page.text == "Daily":
 					data["daily"] = loadDailyPerformanceData(new_url)
-				if additional_page.text == "Foreign":
+				elif additional_page.text == "Foreign":
 					data["foreign"] = loadForeignBoxOfficeData(new_url)
+				elif additional_page.text == "Weekend":
+					data["weekend"] = loadWeekendBoxOfficeData(new_url)
+				elif additional_page.text == "Weekly":
+					data["weekend"] = loadWeeklyBoxOfficeData(new_url)
 	except Exception, e:
 		print "ERROR :: {}".format(e)
 	return data
