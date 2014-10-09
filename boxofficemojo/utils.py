@@ -41,7 +41,6 @@ def pullMovieDataFromList(list_id):
 			print total_gross
 			if "/a" not in total_gross.lower():
 				total_gross = int(total_gross)
-			print "hey"
 			total_theaters = movie_datas[3].find_all('font')[0].text.replace(",", "")
 			print total_theaters
 			if "/a" not in total_theaters.lower():
@@ -53,8 +52,9 @@ def pullMovieDataFromList(list_id):
 			if "/a" not in opening_theaters.lower():
 				opening_theaters = int(opening_theaters)
 			opening = movie_datas[6].find_all('a')[0].text
-			print opening
 			details = pullMoviePageData(movie_data_url)
+			for k in details:
+				print k
 	except Exception, e:
 		print e
 
@@ -222,3 +222,87 @@ def loadForeignBoxOfficeData(new_url):
 	except Exception, e:
 		print "ERROR (FOREIGN STATS) :: {}".format(e)
 	return rtn_data
+
+
+def loadWeekendBoxOfficeData(new_url):
+	rtn_data = []
+	try:
+		html_doc = urllib2.urlopen(new_url).read().replace("&nbsp;", " ")
+		soup = BeautifulSoup(html_doc)
+		center = soup.find_all('center')
+		if len(center) > 1:
+			tables = center[1].find_all('table')
+			if len(tables) > 1:
+				for table in tables:
+					rows = tables[6].find_all('tr')
+					if len(rows) > 1:
+						rows = rows[1:]
+						for row in rows:
+							data = row.find_all('td')
+							rtn_item = {}
+							try:
+								rtn_item["date"] = data[0].text
+							except Exception, e:
+								continue
+							try:
+								rtn_item["week"] = int(data[7].text)
+							except Exception, e:
+								continue
+							try:
+								rtn_item["rank"] = int(data[1].text)
+							except Exception, e:
+								rtn_item["rank"] = None
+							try:
+								rtn_item["gross"] = int(data[2].text[1:])
+							except Exception, e:
+								rtn_item["gross"] = None
+							try:
+								rtn_item["theaters"] = int(data[4].text)
+							except Exception, e:
+								rtn_item["theaters"] = None
+							rtn_data.append(rtn_item)
+	except Exception, e:
+		print "ERROR (WEEKEND STATS) :: {}".format(e)
+	return rtn_data
+
+
+def loadWeeklyBoxOfficeData(new_url):
+	rtn_data = []
+	try:
+		html_doc = urllib2.urlopen(new_url).read().replace("&nbsp;", " ")
+		soup = BeautifulSoup(html_doc)
+		center = soup.find_all('center')
+		if len(center) > 1:
+			tables = center[1].find_all('table')
+			if len(tables) > 0:
+				count = 0
+				for table in tables:
+					year = int(center[1].find_all(attrs={"size": 5})[count].text)
+					rows = table.find_all('tr')
+					if len(rows) > 1:
+						rows = rows[1:]
+						for row in rows:
+							try:
+								data = row.find_all('td')
+								item_data = {
+									"year": year,
+									"week number": int(datas[0].find_all('a')[0].get('href').split("wk=")[1].split("&")[1]),
+								}
+								try:
+									item_data["rank"] = int(datas[1].text.replace(",", ""))
+								except Exception, e:
+									print e
+								try:
+									item_data["gross"] = int(datas[2].text[1:].replace(",", ""))
+								except Exception, e:
+									print e
+								try:
+									item_data["theaters"] = int(datas[4].text.replace(",", ""))
+								except Exception, e:
+									print e
+								rtn_data.append(item_data)
+							except Exception, e:
+								print e
+					count += 1
+	except Exception, e:
+		raise e
