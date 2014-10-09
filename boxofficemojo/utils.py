@@ -21,50 +21,57 @@ def syncBoxOfficeMojoData(request):
 
 
 def pullMovieDataFromList(list_id):
-	request_url = "http://boxofficemojo.com/movies/alphabetical.htm?letter={0}&p=.htm".format(list_id)
 	try:
-		html_doc = urllib2.urlopen(request_url).read()
-		html_doc = html_doc.replace("&nbsp;", " ")
-		soup = BeautifulSoup(html_doc)
-		html_tables = soup.find_all('table')
-		movie_list = html_tables[3].find_all('tr')
-		count = 0
-		for movie in movie_list:
-			try:
-				data = {}
-				if count == 0:
-					count += 1
-					continue
-				movie_datas = movie.find_all('td')
-				movie_name = movie_datas[0].find_all('b')[0].text
-				data["name"] = movie_name
-				movie_data_url = movie_datas[0].find_all('a')[0].get('href')
-				movie_studio = movie_datas[1].find_all('font')[0].text
-				data["studio"] = movie_studio
-				total_gross = movie_datas[2].find_all('font')[0].text[1:].replace(",", "")
-				data["total gross"] = total_gross
-				if "/a" not in total_gross.lower():
-					total_gross = int(total_gross)
-				total_theaters = movie_datas[3].find_all('font')[0].text.replace(",", "")
-				data["total theaters"] = total_theaters
-				if "/a" not in total_theaters.lower():
-					total_theaters = int(total_theaters)
-				opening_gross = movie_datas[4].find_all('font')[0].text[1:].replace(",", "")
-				if "/a" not in opening_gross.lower():
-					opening_gross = int(opening_gross)
-				data["opening gross"] = opening_gross
-				opening_theaters = movie_datas[5].find_all('font')[0].text.replace(",", "")
-				if "/a" not in opening_theaters.lower():
-					opening_theaters = int(opening_theaters)
-				data["opening theaters"] = opening_theaters
-				opening = movie_datas[6].find_all('a')[0].text
-				data["opening"] = opening
-				data["details"] = pullMoviePageData(movie_data_url)
-				bom_data = BOMMovieData(movie_name=movie_name)
-				bom_data.movie_data = data
-				bom_data.save()
-			except Exception, e:
-				print "Error pulling movie data :: {}".format(e)
+		page = 1
+		keep_going = True
+		while keep_going:
+			request_url = "http://boxofficemojo.com/movies/alphabetical.htm?letter={0}&page={1}&p=.htm".format(list_id, page)
+			page += 1
+			html_doc = urllib2.urlopen(request_url).read()
+			html_doc = html_doc.replace("&nbsp;", " ")
+			soup = BeautifulSoup(html_doc)
+			html_tables = soup.find_all('table')
+			movie_list = html_tables[3].find_all('tr')
+			count = 0
+			if len(movie_list) < 2:
+				keep_going = False
+				break
+			for movie in movie_list:
+				try:
+					data = {}
+					if count == 0:
+						count += 1
+						continue
+					movie_datas = movie.find_all('td')
+					movie_name = movie_datas[0].find_all('b')[0].text
+					data["name"] = movie_name
+					movie_data_url = movie_datas[0].find_all('a')[0].get('href')
+					movie_studio = movie_datas[1].find_all('font')[0].text
+					data["studio"] = movie_studio
+					total_gross = movie_datas[2].find_all('font')[0].text[1:].replace(",", "")
+					data["total gross"] = total_gross
+					if "/a" not in total_gross.lower():
+						total_gross = int(total_gross)
+					total_theaters = movie_datas[3].find_all('font')[0].text.replace(",", "")
+					data["total theaters"] = total_theaters
+					if "/a" not in total_theaters.lower():
+						total_theaters = int(total_theaters)
+					opening_gross = movie_datas[4].find_all('font')[0].text[1:].replace(",", "")
+					if "/a" not in opening_gross.lower():
+						opening_gross = int(opening_gross)
+					data["opening gross"] = opening_gross
+					opening_theaters = movie_datas[5].find_all('font')[0].text.replace(",", "")
+					if "/a" not in opening_theaters.lower():
+						opening_theaters = int(opening_theaters)
+					data["opening theaters"] = opening_theaters
+					opening = movie_datas[6].find_all('a')[0].text
+					data["opening"] = opening
+					data["details"] = pullMoviePageData(movie_data_url)
+					bom_data = BOMMovieData(movie_name=movie_name)
+					bom_data.movie_data = data
+					bom_data.save()
+				except Exception, e:
+					print "Error pulling movie data :: {}".format(e)
 	except Exception, e:
 		print e
 
