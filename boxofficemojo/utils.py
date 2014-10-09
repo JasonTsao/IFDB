@@ -46,7 +46,7 @@ def pullMovieDataFromList(list_id):
 			if "/a" not in total_gross.lower():
 				total_gross = int(total_gross)
 			total_theaters = movie_datas[3].find_all('font')[0].text.replace(",", "")
-			data["total theaters"] total_theaters
+			data["total theaters"] = total_theaters
 			if "/a" not in total_theaters.lower():
 				total_theaters = int(total_theaters)
 			opening_gross = movie_datas[4].find_all('font')[0].text[1:].replace(",", "")
