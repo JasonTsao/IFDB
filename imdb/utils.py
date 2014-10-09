@@ -11,7 +11,7 @@ from io import StringIO
 from datetime import date, timedelta
 from django.http import HttpResponse, HttpResponseRedirect
 
-from profiles.models import Profile, CollaborationLink
+from profiles.models import UserProfile, Profile, CollaborationLink
 from movies.models import Movie, MovieGenre
 
 OMDB_API = 'http://www.omdbapi.com/?'
@@ -31,18 +31,13 @@ def searchOMDB(url):
 
 
 def saveUserProfile(movie, name, role):
-	# Saving Writer information
 	try:
-		profile, created = Profile.objects.get_or_create(name=name, role=role)
+		user, created = UserProfile.objects.get_or_create(name=name)
 
-		print 'name: {0}'.format(name)
-		print 'created: {0}'.format(e)
+		profile, created = Profile.objects.get_or_create(user=user, name=name, role=role)
 
 		if created:
 			movies_array = profile.movies
-
-			print 'movies array'
-			print movies_array
 
 			if not movies_array:
 				movies_array = []
@@ -51,6 +46,7 @@ def saveUserProfile(movie, name, role):
 			profile.movies = movies_array
 		else:
 			movies_array = profile.movies
+
 			if not movie in movies_array:
 				movies_array.append(movie.id)
 				profile.movies = movies_array
@@ -111,9 +107,9 @@ def saveMovieAndProfileData(response):
 		movie = Movie.objects.get(imdb_id=response['imdbID'])
 
 		# Saving Director Information
-		director_id = saveUserProfile(movie, response['Director'], 'director')
+		director_id = saveUserProfile(movie, response['Director'].strip(), 'director')
 		# Saving Writer Information
-		writer_id = saveUserProfile(movie, response['Writer'], 'writer')
+		writer_id = saveUserProfile(movie, response['Writer'].strip(), 'writer')
 
 		movie_collaborators.append(director_id)
 		movie_collaborators.append(writer_id)
@@ -121,7 +117,7 @@ def saveMovieAndProfileData(response):
 		actors = response['Actors'].split(',')
 
 		for actor in actors:
-			actor_id = saveUserProfile(movie, actor, 'actor')
+			actor_id = saveUserProfile(movie, actor.strip(), 'actor')
 			movie_collaborators.append(actor_id)
 
 		addProfileLinks(movie_collaborators, movie.id)

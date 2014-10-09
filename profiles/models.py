@@ -5,16 +5,40 @@ from djangotoolbox.fields import ListField, EmbeddedModelField, DictField
 from movies.models import Movie, MovieGenre
 from .forms import StringListField
 
-class ItemListField(ListField):
+#How to make EmbeddedField and ListField viewable in the admin page
+#https://gist.github.com/jonashaag/1200165
+#https://gist.github.com/ielshareef/3011156
+
+class MovieListField(ListField):
     def formfield(self, **kwargs):
         return models.Field.formfield(self, StringListField, **kwargs)
 
+
+class UserProfile(models.Model):
+	name = models.CharField(max_length=255)
+	birthday = models.DateField(null=True,blank=True)
+
+	created = models.DateTimeField(auto_now_add=True)
+	modified = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		unique_together = ["name", "birthday"]
+
+	def __unicode__(self):
+		try:
+			return str('{0}'.format(self.name)).decode().encode('utf-8')
+		except Exception as e:
+			return "Can't be displayed"
+
+
 class Profile(models.Model):
+	user = models.ForeignKey(UserProfile)
 	role = models.CharField(max_length=255, null=True, blank=True)
 	name= models.CharField(max_length=255)
+	movies = MovieListField(models.ForeignKey(Movie))
 	#movies = ListField(models.CharField(max_length=255)) #save Movie.id here
 	#movies = ListField(models.ForeignKey(Movie)) #save Movie.id here
-	movies = ItemListField(models.ForeignKey(Movie))
+	
 	#collaborators = ListField(models.CharField(max_length=255))
 
 	class Meta:
@@ -31,7 +55,7 @@ class CollaborationLink(models.Model):
 	profile_1 = models.ForeignKey(Profile, related_name='profile_1')
 	profile_2 = models.ForeignKey(Profile, related_name='profile_2')
 	#movies = ListField(models.ForeignKey(Movie))
-	movies = ItemListField(models.ForeignKey(Movie))
+	movies = MovieListField(models.ForeignKey(Movie))
 
 	class Meta:
 		unique_together = ["profile_1", "profile_2"]

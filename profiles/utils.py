@@ -25,11 +25,7 @@ def newProfile(request):
 		movie.genre = 'horror'
 		movie.save()
 
-
 		movies.append(movie)
-
-		print 'movies'
-		print movies
 
 		new_profile = Profile()
 		new_profile.movies = movies
@@ -72,16 +68,6 @@ def getProfiles(request):
 		for movie in profile.movies:
 			movie = Movie.objects.get(id=movie)
 			movies_array.append(movie.title)
-
-			'''
-			movie_genres = []
-			movie_dict = model_to_dict(movie)
-			for movie_genre in movie_dict['genres']:
-				movie_genres.append(model_to_dict(movie_genre))
-
-			movie_dict['genres'] = movie_genres
-			movies_array.append(movie_dict)
-			'''
 
 		profile_dict['movies'] = movies_array
 		profiles_array.append(profile_dict)
