@@ -307,18 +307,18 @@ def loadWeeklyBoxOfficeData(new_url):
 								data = row.find_all('td')
 								item_data = {
 									"year": year,
-									"week number": int(datas[0].find_all('a')[0].get('href').split("wk=")[1].split("&")[1]),
+									"week number": int(data[0].find_all('a')[0].get('href').split("wk=")[1].split("&")[1]),
 								}
 								try:
-									item_data["rank"] = int(datas[1].text.replace(",", ""))
+									item_data["rank"] = int(data[1].text.replace(",", ""))
 								except Exception, e:
 									print e
 								try:
-									item_data["gross"] = int(datas[2].text[1:].replace(",", ""))
+									item_data["gross"] = int(data[2].text[1:].replace(",", ""))
 								except Exception, e:
 									print e
 								try:
-									item_data["theaters"] = int(datas[4].text.replace(",", ""))
+									item_data["theaters"] = int(data[4].text.replace(",", ""))
 								except Exception, e:
 									print e
 								rtn_data.append(item_data)
